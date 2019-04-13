@@ -8,8 +8,7 @@ const contractBot = require("./bots/dodContractBot")
 const { environment, schedule } = require("./keys/config.js");
 logger.info(`Running bot in ${environment}`);
 
-cron.schedule(schedule, async () => {   
-    
+const launchDodChecks = async() => {
     logger.info(`Chrome Launched DoD-Checker...`); 
     const browser = await pupeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']});
     const page = await browser.newPage(); // Create new instance of puppet
@@ -33,4 +32,15 @@ cron.schedule(schedule, async () => {
     await page.close();
     await browser.close();
     logger.info(`Chrome Closed DoD-Checker.`);
-});
+}
+
+if(environment === 'production'){
+    cron.schedule(schedule, async () => {   
+        launchDodChecks();
+    });
+} else if (environment === 'development') {
+    launchDodChecks();
+} else {
+    logger.debug("Environment variable not set.")
+}
+
