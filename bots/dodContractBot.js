@@ -12,7 +12,7 @@ const { environment } = require("../keys/config");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 
-const fetchContracts = (url, page) => new Promise(async(resolve,reject) => { 
+const fetchContracts = async (url, page) => { 
     try { // Connect to page, get all links...        
         await page.goto(url, { waitUntil: 'networkidle2' }); // Ensure no network requests are happening (in last 500ms).        
 
@@ -31,12 +31,12 @@ const fetchContracts = (url, page) => new Promise(async(resolve,reject) => {
             return data;
         });
 
-        resolve(teams);
+        return teams
     }
     catch(err){
-        reject(err);
+        throw err;
     }
-});
+};
 
 const bot = (page, today) => new Promise((resolve, reject) => {
 
@@ -55,7 +55,7 @@ const bot = (page, today) => new Promise((resolve, reject) => {
             let html = await page.content();
             return { html, link: contracts[0].link, date: contracts[0].date };
         } else {
-            reject("No results on page.")
+            return Promise.reject(`No results found for ${today}`)
         }
         
     })
@@ -90,7 +90,7 @@ const bot = (page, today) => new Promise((resolve, reject) => {
                 }
 
                 let lines = allDivs.filter(ln => (ln.trim() !== "" && ln.substr(0, 1) != "*")).map(ln => ln.trim());
-                resolve({ link, date, lines });
+                resolve({ link, lines });
 
             } else {
                 reject("No updates found.");
@@ -99,7 +99,7 @@ const bot = (page, today) => new Promise((resolve, reject) => {
             reject("Data from HTML is flawed.");
         }
     }))
-    .then(async({ link, date, lines }) => { // Parse into a single twitter object...
+    .then(async({ link, lines }) => { // Parse into a single twitter object...
         
         let results = {};
         let current = null;
@@ -193,8 +193,8 @@ const bot = (page, today) => new Promise((resolve, reject) => {
     }))
     .then((res) => resolve(res)) // resolve the main promise...
     .catch(err => {
-        if(["No results on page.", "No updates found.", "Tweets already sent.", "Problem scraping data.", "Not in production, not sending tweets."].includes(err)){
-            logger.info(`DoD Contracts Check –– ${err.message}`);
+        if(["No results on page.", "No updates found.", "Tweets already sent.", "Problem scraping data.", "Not in production, not sending tweets.",`No results found for ${today}`].includes(err)){
+            logger.info(`DoD Contracts Check –– ${err}`);
             resolve();
         } else {
             reject(err);

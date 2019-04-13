@@ -6,13 +6,14 @@ const logger = require("./logger");
 const contractBot = require("./bots/dodContractBot")
 
 const { environment, schedule } = require("./keys/config.js");
-logger.info(`Running bot in ${environment}`);
+const today = environment === "production" ? moment().format("MM-DD-YYYY") : moment("04-10-2019").format("MM-DD-YYYY");
+logger.info(`Running bot in ${environment} on ${today}`);
 
 const launchDodChecks = async() => {
     logger.info(`Chrome Launched DoD-Checker...`); 
-    const browser = await pupeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']});
+    const headless = environment === "production" ? true : false;
+    const browser = await pupeteer.launch({ headless, args: ['--no-sandbox', '--disable-setuid-sandbox']});
     const page = await browser.newPage(); // Create new instance of puppet
-    let today = moment();
 
     await page.setRequestInterception(true) // Optimize (no stylesheets, images)...
     page.on('request', (request) => {
@@ -24,7 +25,7 @@ const launchDodChecks = async() => {
     });
 
     try {
-        await contractBot(page, today.format("MM-DD-YYYY"));
+        await contractBot(page, today);
     } catch(err) {
         logger.debug(`DoD Bot -- ${err}`);
     }
