@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "dotenv": "^7.0.0",
+    "lodash": "^4.17.11",
+    "moment": "^2.24.0",
+    "node-cron": "^2.0.3",
+    "puppeteer": "^1.13.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "twit": "^2.2.11",
+    "underscore": "^1.9.1",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {}
+}
